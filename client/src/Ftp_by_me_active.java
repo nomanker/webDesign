@@ -91,6 +91,43 @@ public class Ftp_by_me_active {
         Vector<FTPFile> tempfiles = new Vector<>();
 
         String line = null;
+        //读取所有的文件信息，填写FTP文件参数
+        while ((line = controlReader.readLine()) != null) {
+            if(line.equals("end of files"))
+                break;
+            System.out.println(line);
+            FTPFile temp = new FTPFile();
+            setFtpFileInfo(temp, line);
+            tempfiles.add(temp);
+        }
+
+        // Read command response
+        response = controlReader.readLine();
+        System.out.println(response);
+
+        //数据转存
+        FTPFile[] files = new FTPFile[tempfiles.size()];
+        tempfiles.copyInto(files);//将vector数据存到数组里
+
+        return files;
+    }
+
+    //获取指定文件夹下的文件内容
+    public FTPFile[] getTargetFile(String targetFile) throws Exception {
+        String response;
+        // Send LIST command
+        controlOut.println("LIST "+targetFile);
+
+        // Read command response
+        response = controlReader.readLine();
+        System.out.println(response);
+
+
+        // Read data from server
+        Vector<FTPFile> tempfiles = new Vector<>();
+
+        String line = null;
+        //读取所有的文件信息，填写FTP文件参数
         while ((line = controlReader.readLine()) != null) {
             if(line.equals("end of files"))
                 break;
@@ -108,7 +145,6 @@ public class Ftp_by_me_active {
         tempfiles.copyInto(files);//将vector数据存到数组里
 
         return files;
-
     }
 
     //通过字符串解析构造一个FTPfile对象
@@ -142,16 +178,18 @@ public class Ftp_by_me_active {
             System.out.println("File not Exists...");
             return;
         }
+        //inputStream
         FileInputStream is = new FileInputStream(f);
         BufferedInputStream input = new BufferedInputStream(is);
         //-----------------------------------------------
 
         // Send PORT command
         String url="127.0.0.1";
+        //随机模拟一个端口，进行数据的传输
         int dataport=(int)(Math.random()*100000%9999)+1024;
         String portCommand="MYPORT "+ url+","+dataport;
         controlOut.println(portCommand);
-
+        //打印对应的恢复结果
         String response;
         response=controlReader.readLine();
         System.out.println(response);
@@ -161,6 +199,7 @@ public class Ftp_by_me_active {
         controlOut.println("STOR " + f.getName());
 
         // Open data connection
+        //打开数据连接
         ServerSocket dataSocketServ = new ServerSocket(dataport);
         Socket dataSocket=dataSocketServ.accept();
 
@@ -172,6 +211,7 @@ public class Ftp_by_me_active {
         BufferedOutputStream output = new BufferedOutputStream(dataSocket.getOutputStream());
         byte[] buffer = new byte[4096];
         int bytesRead = 0;
+        //块输出
         while ((bytesRead = input.read(buffer)) != -1) {
             output.write(buffer, 0, bytesRead);
         }
@@ -183,14 +223,14 @@ public class Ftp_by_me_active {
 
 
         response = controlReader.readLine();
+        //打印对应的回复结果
         System.out.println(response);
-
     }
 
 
 
-    //下载 from_file_name是下载的文件名,to_path是下载到的路径地址
-    public void download(String from_file_name, String to_path) throws Exception {
+    //下载 from_file_name是服务器相对地址的文件路径,local_file_name是要保存在本地的文件名,to_path是下载到的路径地址
+    public void download(String server_name,String local_file_name, String to_path) throws Exception {
         // Send PORT command
         String url="127.0.0.1";
         int dataport=(int)(Math.random()*100000%9999)+1024;
@@ -202,7 +242,7 @@ public class Ftp_by_me_active {
         System.out.println(response);
 
         //send RETR command
-        controlOut.println("RETR " + from_file_name);
+        controlOut.println("RETR " + server_name);
 
         // Open data connection
         ServerSocket dataSocketServ = new ServerSocket(dataport);
@@ -211,7 +251,7 @@ public class Ftp_by_me_active {
 
         // Read data from server
         BufferedOutputStream output = new BufferedOutputStream(
-                new FileOutputStream(new File(to_path, from_file_name)));
+                new FileOutputStream(new File(to_path, local_file_name)));
         BufferedInputStream input = new BufferedInputStream(
                 dataSocket.getInputStream());
         byte[] buffer = new byte[4096];
@@ -231,5 +271,55 @@ public class Ftp_by_me_active {
         response = controlReader.readLine();
         System.out.println(response);
     }
+
+    //重命名文件
+
+    /**
+     *
+     * @param oldName 代表旧文件，在服务器上，相对根目录的地址+文件名
+     * @param newName 代表新命名的文件，在服务器上，相对于根目录的地址+文件名
+     */
+    public  void renameFile(String oldName,String newName){
+        controlOut.println("RENAME "+oldName+">"+newName);
+        //获取回复的消息
+        String response = null;
+        try {
+            response = controlReader.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println(response);
+    }
+
+    //删除文件
+
+    /**
+     *
+     * @param fileName  要删除的文件名
+     */
+    public  void deleteFile(String fileName){
+        controlOut.println("DEL "+fileName);
+        String response =null;
+        try {
+            response = controlReader.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println(response);
+    }
+
+    public void createNewFile(String fileName){
+        controlOut.println("MKD "+fileName);
+        String response="";
+        //获取响应信息
+        try {
+             response = controlReader.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println(response);
+    }
+
+
 
 }

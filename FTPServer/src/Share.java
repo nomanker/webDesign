@@ -29,7 +29,7 @@ public class Share {
 
     //初始化根目录，权限用户，能够登录的用户信息  
     public static void init(){
-        String path = System.getProperty("user.dir") + "/config/server.xml";
+        String path = System.getProperty("user.dir") + "/FTPServer/config/server.xml";
 
         File file = new File(path);
         SAXBuilder builder = new SAXBuilder();

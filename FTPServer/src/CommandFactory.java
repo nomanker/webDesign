@@ -23,6 +23,11 @@ public class CommandFactory {
 
             case "PASV":return new PasvCommand();
 
+            case "DEL":return new DelCommand();
+
+            case "RENAME":return new RenameCommand();
+
+            case "MKD": return new MkdCommand();
             default :return null;
         }
 

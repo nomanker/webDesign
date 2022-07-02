@@ -23,7 +23,6 @@
 
 ```
    ftp=new Ftp_by_me_passive(FTP,username,password);
-
 ```
 或者：
 

@@ -1,5 +1,5 @@
 <config>
-    <rootDir>C:\Users\32706\Desktop\FTP\FTPServer</rootDir>
+    <rootDir>D:\FTPServer</rootDir>
     <users>
         <user>
             <username>admin</username>

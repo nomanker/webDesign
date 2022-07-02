@@ -17,6 +17,7 @@ public class ButtonColumn extends AbstractCellEditor implements
     private JButton editButton;
     private String text;
 
+    //最后一个可以编辑的按钮
     public ButtonColumn(JTable table, int column) {
         super();
         this.table = table;
@@ -32,6 +33,7 @@ public class ButtonColumn extends AbstractCellEditor implements
 
     public Component getTableCellRendererComponent(JTable table, Object value,
                                                    boolean isSelected, boolean hasFocus, int row, int column) {
+        //查看是否聚焦
         if (hasFocus) {
             renderButton.setForeground(table.getForeground());
             renderButton.setBackground(UIManager.getColor("Button.background"));
@@ -63,7 +65,7 @@ public class ButtonColumn extends AbstractCellEditor implements
 
         FTPFile[]  file1= new FTPFile[0];
         try {
-            file1 = Frame_Main.getFile(); //得到所有的文件
+//            file1 = Frame_Main.getFile(); //得到所有的文件
 
         } catch (Exception e1) {
             e1.printStackTrace();
@@ -73,6 +75,7 @@ public class ButtonColumn extends AbstractCellEditor implements
         File file = null;
         String path = null;
         JFileChooser fileChooser = new JFileChooser();
+        //调出系统界面
         FileSystemView fsv = FileSystemView.getFileSystemView();
         fsv.createFileObject(from_file_name);
         //System.out.println(fsv.getHomeDirectory());  
@@ -86,7 +89,8 @@ public class ButtonColumn extends AbstractCellEditor implements
             System.out.println("path: "+path);
             System.out.println("from_file_name:"+from_file_name);
             try {
-                Frame_Main.getFtp().download(from_file_name, path);
+                //这是原本就封装好的service
+//                Frame_Main.getFtp().download(from_file_name, path);
                 System.out.println("下载成功! ");
 
             } catch (Exception e1) {

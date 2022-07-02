@@ -170,7 +170,8 @@ public class Ftp_by_me_active {
 
 
     //生成InputStream用于上传本地文件
-    public void upload(String File_path) throws Exception {
+    //serverPathPrefix代表服务器的特定前缀
+    public void upload(String serverPathPrefix,String File_path) throws Exception {
         //本地文件读取-----------------------------------
         System.out.print("File Path :" + File_path);
         File f = new File(File_path);
@@ -196,7 +197,8 @@ public class Ftp_by_me_active {
 
 
         // Send command STOR
-        controlOut.println("STOR " + f.getName());
+        //存储在服务器上面的时候需要加上特定的前缀
+        controlOut.println("STOR " + serverPathPrefix+f.getName());
 
         // Open data connection
         //打开数据连接

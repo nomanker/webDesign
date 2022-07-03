@@ -225,7 +225,7 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
                 String old_file_name=prefix+node.toString();
                 String new_file=JOptionPane.showInputDialog("请输入新文件名:");
                 if (new_file==null) return;
-                ftp.renameFile(old_file_name,new_file);
+                ftp.renameFile(old_file_name,prefix+new_file);
                 node.setUserObject(new FileNode(new_file,((FileNode) node.getUserObject()).ftpFile,false));
 
                 System.out.println("重命名成功");

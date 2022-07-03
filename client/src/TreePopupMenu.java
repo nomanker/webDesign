@@ -302,7 +302,6 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
                     path=fileChooser.getSelectedFile().getPath();
                     System.out.println("path: "+path);
                     try {
-                        //下载
                         //获取当前的目录前缀
                         String prefix = TreeNode2FilePathPrefix();
                         String dirName = node.toString();
@@ -312,6 +311,10 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
                         // TODO Auto-generated catch block
                         e1.printStackTrace();
                     }
+                    //分割文件拿到最后一个
+                    String[] fileNames = path.split("\\\\");
+                    node.add(new DefaultMutableTreeNode(fileNames[fileNames.length-1]));
+                    ((DefaultTreeModel) tree.getModel()).nodeStructureChanged(node);
                 }
             }
             return ;
@@ -325,8 +328,10 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
             if (node.isRoot()) {
                 return;
             }
+            String prefix = TreeNode2FilePathPrefix();
+            String fileName = node.toString();
+            ftp.deleteFile(prefix+fileName);
             ((DefaultTreeModel) tree.getModel()).removeNodeFromParent(node);
-
         } else if (e.getSource() == editItem) {
             //代表修改文件
             //获取前缀

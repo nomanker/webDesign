@@ -100,12 +100,9 @@ public class Ftp_by_me_active {
             setFtpFileInfo(temp, line);
             tempfiles.add(temp);
         }
-
-        // Read command response
         response = controlReader.readLine();
         System.out.println(response);
 
-        //数据转存
         FTPFile[] files = new FTPFile[tempfiles.size()];
         tempfiles.copyInto(files);//将vector数据存到数组里
 

@@ -7,12 +7,7 @@ import java.awt.event.MouseListener;
 import java.io.File;
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeCellEditor;
-import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
-import javax.swing.tree.TreeSelectionModel;
+import javax.swing.tree.*;
 
 public class TreePopupMenu extends JFrame implements MouseListener, ActionListener {
     //初始化参数--------------------------------
@@ -31,9 +26,6 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
         return file;
     }
 
-
-
-    //    private static final long serialVersionUID = 1L;
     JTree tree;
     JPopupMenu popMenu;//右键菜单
     JMenuItem delItem;//删除
@@ -41,7 +33,7 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
     JMenuItem downLoadItem;//下载
 
     //树形文件目录
-    DefaultTreeModel treeModel;
+    FileTreeModel treeModel;
     DefaultMutableTreeNode root;
     JScrollPane scrollPane;
 
@@ -52,12 +44,15 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
     JMenuItem createFile;//创建文件夹
     JMenuItem uploadFile;//上传文件到指定文件目录底下
 
+
+
+
+
     public TreePopupMenu() {
         initialize();
     }
 
     private void initialize() {
-//        frame.setIconImage(Toolkit.getDefaultToolkit().getImage(Frame_Main.class.getResource("/com/sun/java/swing/plaf/windows/icons/UpFolder.gif")));
         setTitle("FTP 客户端");
         setBounds(100, 100, 470, 534);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -109,7 +104,6 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
                     //获取所有文件，
                     file=ftp.getAllFile();
                     setTableInfo();//显示所有文件信息
-                    //设置不可更改
                     url.setEditable(false);
                     usernameField.setEditable(false);
                     passwordField.setEditable(false);
@@ -119,47 +113,6 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
                 JOptionPane.showConfirmDialog(null, "用户名或者密码错误\n username："+username, "ERROR_MESSAGE",JOptionPane.ERROR_MESSAGE);
             }
         });
-
-
-        //上传按钮--------------------------------------------------
-        //上传按钮显示逻辑
-//        JButton upload = new JButton("上传");
-//        upload.setFont(new Font("宋体", Font.PLAIN, 12));
-//        upload.setBackground(UIManager.getColor("Button.highlight"));
-//        upload.setBounds(312, 45, 82, 23);
-//        getContentPane().add(upload);
-//        upload.addActionListener(arg0 -> {
-            //上传点击按钮触发------------------------------------
-//            System.out.println("上传！！！！！");
-//            int result = 0;
-//            File file = null;
-//            String path = null;
-//            JFileChooser fileChooser = new JFileChooser();
-//            FileSystemView fsv = FileSystemView.getFileSystemView();
-//            System.out.println(fsv.getHomeDirectory());                //得到桌面路径
-//            fileChooser.setCurrentDirectory(fsv.getHomeDirectory());
-//            fileChooser.setDialogTitle("请选择要上传的文件...");
-//            fileChooser.setApproveButtonText("确定");
-//            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-//            result = fileChooser.showOpenDialog(null);
-//            if (JFileChooser.APPROVE_OPTION == result) {
-//                path=fileChooser.getSelectedFile().getPath();
-//                System.out.println("path: "+path);
-//                try {
-//                    //下载
-//                    ftp.upload(path);
-//                    System.out.println("文件上传成功");
-//                } catch (Exception e1) {
-//                    // TODO Auto-generated catch block
-//                    e1.printStackTrace();
-//                }
-//            }
-            //上传点击按钮触发------------------------------------
-//        });
-
-        //上传按钮--------------------------------------------------
-
-
 
         //刷新按钮--------------------------------------------------
         JButton refresh = new JButton("刷新");
@@ -182,7 +135,7 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
         //刷新按钮--------------------------------------------------
 
 
-        //
+        //设置弹出按钮
         popMenu = new JPopupMenu();
         delItem = new JMenuItem("删除");
         delItem.addActionListener(this);
@@ -209,6 +162,10 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
         fileMenu.add(renameFile);
         fileMenu.add(deleteFile);
         fileMenu.add(uploadFile);
+
+        //设置图标
+
+
     }
 
     public void mouseClicked(MouseEvent e) {
@@ -237,7 +194,9 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
         tree.setSelectionPath(path);
         if (e.getButton() == 3) {
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-            if (node.isLeaf())  popMenu.show(tree, e.getX(), e.getY());
+            //判断是文件还是文件夹
+            boolean isFile=((FileNode)node.getUserObject()).ftpFile.isFile();
+            if (isFile)  popMenu.show(tree, e.getX(), e.getY());
             else{
                 fileMenu.show(tree,e.getX(),e.getY());
             }
@@ -251,7 +210,8 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
     public void actionPerformed(ActionEvent e) {
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
         //判断是否是文件夹
-        if (node.getChildCount()!=0){
+        boolean isFile=((FileNode)node.getUserObject()).ftpFile.isFile();
+        if (!isFile){
             //这个代表是文件夹
             if (e.getSource()==renameFile){
                 //重命名
@@ -264,8 +224,10 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
                 }
                 String old_file_name=prefix+node.toString();
                 String new_file=JOptionPane.showInputDialog("请输入新文件名:");
+                if (new_file==null) return;
                 ftp.renameFile(old_file_name,new_file);
-                node.setUserObject(new_file);
+                node.setUserObject(new FileNode(new_file,((FileNode) node.getUserObject()).ftpFile,false));
+
                 System.out.println("重命名成功");
             }else if (e.getSource()==deleteFile){
                 //获取文件名
@@ -281,9 +243,14 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
                 String fileName = node.toString();
                 //弹出窗口确定
                 String newDictionary=JOptionPane.showInputDialog("请输入新文件名:");
+                if (newDictionary==null) return;
                 ftp.createNewFile(prefix+fileName+"/"+newDictionary);
-                DefaultMutableTreeNode child = new DefaultMutableTreeNode(newDictionary);
+                FTPFile ftpFile= new FTPFile();
+                ftpFile.setName(newDictionary);
+                ftpFile.setType(FTPFile.DIRECTORY_TYPE);
+                DefaultMutableTreeNode child = new DefaultMutableTreeNode(new FileNode(newDictionary,ftpFile,false));
                 node.add(child);
+                ((FileTreeModel) tree.getModel()).nodeStructureChanged(node);
                 System.out.println("新建成功");
             }else if (e.getSource()==uploadFile){
                 //上传文件按钮
@@ -313,17 +280,14 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
                     }
                     //分割文件拿到最后一个
                     String[] fileNames = path.split("\\\\");
-                    node.add(new DefaultMutableTreeNode(fileNames[fileNames.length-1]));
-                    ((DefaultTreeModel) tree.getModel()).nodeStructureChanged(node);
+                    FTPFile ftpFile=new FTPFile();
+                    ftpFile.setType(FTPFile.FILE_TYPE);
+                    node.add(new DefaultMutableTreeNode(new FileNode(fileNames[fileNames.length-1],ftpFile,false)));
+                    ((FileTreeModel) tree.getModel()).nodeStructureChanged(node);
                 }
             }
             return ;
         }
-//        if (e.getSource() == addItem) {
-//            ((DefaultTreeModel) tree.getModel()).insertNodeInto(new DefaultMutableTreeNode("新建文件"),
-//                    node, node.getChildCount());
-//            tree.expandPath(tree.getSelectionPath());
-//        } else
         if (e.getSource() == delItem) {
             if (node.isRoot()) {
                 return;
@@ -341,6 +305,7 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
             //获取旧文件的后缀
             String suffix = node.toString().split("\\.")[1];
             String new_file=JOptionPane.showInputDialog("请输入新文件名:");
+            if (new_file==null) return;
             String new_file_name = prefix+new_file;
             //修改完前端的名字，得传输对应的名字给后端，进行相应的处理
             //服务端需要修改的文件名，传递的是相对路径的文件Path
@@ -348,9 +313,9 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
             //更新树节点对应的名字
             //服务器重新命名
             ftp.renameFile(old_file_name,new_file_name);
-            node.setUserObject(new_file+"."+suffix);
+            node.setUserObject(new FileNode(new_file+"."+suffix,((FileNode) node.getUserObject()).ftpFile,false));
             System.out.println("修改成功");
-            ((DefaultTreeModel) tree.getModel()).nodeStructureChanged(node);
+            ((FileTreeModel) tree.getModel()).nodeStructureChanged(node);
         } else if (e.getSource()==downLoadItem){
             System.out.println("start download file");
             System.out.println(tree.getSelectionPath());
@@ -400,21 +365,21 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
     private void setTableInfo()
     {
         //初始化文件根节点
-        root = new DefaultMutableTreeNode("FTP服务器根目录");
-        treeModel = new DefaultTreeModel(root);
+        root = new DefaultMutableTreeNode(new FileNode("FEP文件根目录",new FTPFile(),false));
+        treeModel = new FileTreeModel(root);
         //递归添加文件树
         for(int i=0;i<file.length;i++){
             if (file[i].isDirectory()){
                 //递归添加
                 try {
-                    DefaultMutableTreeNode child = new DefaultMutableTreeNode(file[i].getName());
+                    DefaultMutableTreeNode child = new DefaultMutableTreeNode(new FileNode(file[i].getName(),file[i], false));
                     recurDir(child,ftp.getTargetFile("/"+file[i].getName()));
                     root.add(child);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }else{
-                DefaultMutableTreeNode child = new DefaultMutableTreeNode(file[i].getName());
+                DefaultMutableTreeNode child = new DefaultMutableTreeNode(new FileNode(file[i].getName(),file[i], false));
                 root.add(child);
             }
         }
@@ -422,7 +387,9 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
         //我真的佛了，重新绘制，记住一定得重新绘制，不然就掺了，然后控件基本只是声明一次，全局变量
         if (tree!=null) scrollPane.remove(tree);
         tree = new JTree(treeModel);
+        tree.setCellRenderer(new FileTreeRenderer());
         tree.setEditable(true);
+
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         tree.addMouseListener(this);
         tree.setCellEditor(new DefaultTreeCellEditor(tree, new DefaultTreeCellRenderer()));
@@ -444,13 +411,13 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
         for (int i=0;i<curFile.length;i++){
             if (curFile[i].isDirectory()){
                 //获取当前目录的所有
-                DefaultMutableTreeNode child = new DefaultMutableTreeNode(curFile[i].getName());
+                DefaultMutableTreeNode child = new DefaultMutableTreeNode(new FileNode(curFile[i].getName(),curFile[i],false));
                 root.add(child);
                 //如果是文件夹，递归循环
                 System.out.println(TreePrefix(root));
                 recurDir(child,ftp.getTargetFile( TreePrefix(root)+"/"+curFile[i].getName()));
             }else{
-                DefaultMutableTreeNode child = new DefaultMutableTreeNode(curFile[i].getName());
+                DefaultMutableTreeNode child = new DefaultMutableTreeNode(new FileNode(curFile[i].getName(),curFile[i],false));
                 root.add(child);
             }
         }
@@ -493,4 +460,68 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
         });
     }
 
+}
+
+class FileNode{
+    public FileNode(String name,FTPFile ftpFile,boolean isDummyRoot){
+        this.name=name;
+        this.ftpFile=ftpFile;
+        this.isDummyRoot=isDummyRoot;
+    }
+    public boolean isDummyRoot;
+    public String name;
+    public FTPFile ftpFile;
+
+    @Override
+    public String toString() {
+        return name;
+    }
+}
+
+class FileTreeRenderer extends DefaultTreeCellRenderer{
+    static ImageIcon dirImage = new ImageIcon(System.getProperty("user.dir")+"/image/文件夹1.png");
+    static ImageIcon fileImage = new ImageIcon(System.getProperty("user.dir")+"/image/文件.png");
+    public FileTreeRenderer(){
+        dirImage.setImage(dirImage.getImage().getScaledInstance(20,20,Image.SCALE_DEFAULT));
+        fileImage.setImage(fileImage.getImage().getScaledInstance(15,15,Image.SCALE_DEFAULT));
+    }
+    @Override
+    public Component getTreeCellRendererComponent(javax.swing.JTree tree,
+                                                  java.lang.Object value,
+                                                  boolean sel,
+                                                  boolean expanded,
+                                                  boolean leaf,
+                                                  int row,
+                                                  boolean hasFocus){
+        JLabel label= (JLabel) super.getTreeCellRendererComponent(tree,value,sel,expanded,leaf,row,hasFocus);
+
+        DefaultMutableTreeNode node=(DefaultMutableTreeNode)value;
+        FileNode fileNode=(FileNode)node.getUserObject();
+        //设置文字和节点
+        label.setText(fileNode.name);
+        //设置图标
+
+        //设置图标
+        if (fileNode.ftpFile.isFile()){
+            label.setIcon(fileImage);
+        }else{
+            label.setIcon(dirImage);
+        }
+//        label.setIcon(dirImage);
+        //不透明度
+        label.setOpaque(false);
+        return label;
+    }
+}
+class FileTreeModel extends DefaultTreeModel {
+    public FileTreeModel(TreeNode root) {
+        super(root);
+    }
+    @Override
+    public boolean isLeaf(Object node) {
+        DefaultMutableTreeNode treeNode=(DefaultMutableTreeNode)node;
+        FileNode fileNode=(FileNode)treeNode.getUserObject();
+//        if(fileNode.ftpFile.isDirectory()) return false;
+        return fileNode.ftpFile.isFile();
+    }
 }

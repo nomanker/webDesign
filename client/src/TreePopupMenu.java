@@ -241,6 +241,7 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
                 //新建文件夹
                 String prefix = TreeNode2FilePathPrefix();
                 String fileName = node.toString();
+                if (fileName.equals("FEP文件根目录")) fileName="";
                 //弹出窗口确定
                 String newDictionary=JOptionPane.showInputDialog("请输入新文件名:");
                 if (newDictionary==null) return;
@@ -272,6 +273,7 @@ public class TreePopupMenu extends JFrame implements MouseListener, ActionListen
                         //获取当前的目录前缀
                         String prefix = TreeNode2FilePathPrefix();
                         String dirName = node.toString();
+                        if(dirName.equals("FEP文件根目录")) dirName="";
                         ftp.upload(prefix+dirName+"/",path);
                         System.out.println("文件上传成功");
                     } catch (Exception e1) {
